@@ -5,23 +5,21 @@ object Coppel {
   import com.rho.file.quickFunc.{writeToFile,readIntoString}
 
   def main(args: Array[String]): Unit = {
-    println("Hi")
+    val prefix = "[Main] "
+    System.out.println(prefix+"Fetching departments and categories")
     val (deps,cats) = getTree
-
     deps.foreach {dep => 
       println(dep)
       cats(dep.id).foreach(println)
     }
-
-    /*
-    val departments = List(getDepartments.head)
-    for (dep <- departments) {
-      val categories = getCategories(dep.path)
-      println(categories)
-
-    }*/
-    //val body = strip(readIntoString("catlist.html"))
-    //println(readCategories(body))
-    
+    println("ONE")
+    System.out.println(prefix+"Fetching product data")
+    deps.foreach { dep => 
+      val one = getCategoryProducts(cats(dep.id).head.id,0)
+      println(dep.id)
+      println(one.size)
+    }
+    System.out.println(prefix+"Done")
   }
+
 }
