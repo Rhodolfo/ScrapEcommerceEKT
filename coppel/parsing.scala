@@ -72,13 +72,13 @@ object CoppelParsing {
     }
     def getData(id: String): List[String] = {
       val regex = new Regex(
-        "<div\\s+?class=.priceTable.>.+?"+
-        "<span.+?id=.offerPrice_"+id+".+?>(.+?)</span>.+?"+
+        "<span.+?(offer)Price_"+id+"[^>]+?>\\s*?(\\$.+?)</span>.+?"+
         "<dt>(.+?)en(.+?)quincenas.*?<span\\s+?id=.twoWeeksprice.+?"+ 
         "<span.+?id=.creditCoppelPrice_"+id+".+?>(.+?)Quincenal</span>"
       )
+      println(id)
       (regex findFirstMatchIn body) match {
-        case Some(x) => List(x.group(1),x.group(2),x.group(3),x.group(4))
+        case Some(x) => List(x.group(2),x.group(3),x.group(4),x.group(5))
         case None => throw new Error("No match")
       }
     }
