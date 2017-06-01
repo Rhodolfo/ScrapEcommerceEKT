@@ -12,13 +12,13 @@ object Coppel {
       println(dep)
       cats(dep.id).foreach(println)
     }
-    println("ONE")
-    System.out.println(prefix+"Fetching product data")
-    deps.foreach { dep => 
-      val one = getCategoryProducts(cats(dep.id).head.id,0)
-      println(dep.id)
-      println(one.size)
-    }
+    System.out.println(prefix+"Fetching product list")
+    val products = (for {
+      dep <- deps
+      cat <- cats(dep.id)
+    } yield {
+      (cat,getCategoryProducts(cat.id))
+    }).toMap
     System.out.println(prefix+"Done")
   }
 

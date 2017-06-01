@@ -10,19 +10,16 @@ object CoppelParsing {
   val root = "http://www.coppel.com"
 
   abstract class Page(id: String, path: String, name: String) {
-    override def toString: String = id+separator+root+path+" "+separator+name
+    override def toString: String = id+separator+root+path+separator+name
   }
-
   case class Department(id: String, path: String, name: String)  extends Page(id,path,name)
-
   case class Category(id: String, path: String, name: String, parent: String) extends Page(id,path,name) {
-    override def toString: String = id+separator+root+path+" "+separator+name+separator+parent
+    override def toString: String = id+separator+root+path+separator+name+separator+parent
   }
-
   case class Product(id: String, path: String, name: String, price: Int, 
   twoWeeksPrice: Int, twoWeeksNumber: Int, twoWeeksPayment: Int) extends Page(id, path, name) {
     override def toString: String = {
-      id+separator+root+path+" "+separator+name+separator+
+      id+separator+root+path+separator+name+separator+
       price+separator+twoWeeksPrice+separator+twoWeeksPayment+separator+twoWeeksNumber
     }
   }
@@ -36,6 +33,8 @@ object CoppelParsing {
   def toCents(s: String):Int = round(round((s.toDouble*100.0)))
   def stripND(s: String): String = {"\\D".r replaceAllIn(s,"")}
 
+
+
   def readDepartments(body: String): List[Department] = {
     val regex_name = new Regex(
       "<a\\s+?onmouseover.*?"+
@@ -45,6 +44,8 @@ object CoppelParsing {
     (for (entry<-(regex_name findAllMatchIn body).toList)
       yield {Department(entry.group(1),entry.group(2),entry.group(4))})
   }
+
+
 
   def readCategories(body: String, parentId: String): List[Category] = {
     val regex = new Regex(
@@ -58,6 +59,8 @@ object CoppelParsing {
     })
   }
 
+
+
   def readProducts(body: String): List[Product] = {
     def getTitles: List[List[String]] = {
       val regex = new Regex(
@@ -70,20 +73,25 @@ object CoppelParsing {
           List(entry.group(1),entry.group(2),entry.group(4))
       })
     }
-    def getData(id: String): List[String] = {
-      val regex = new Regex(
-        "<span.+?(offer)Price_"+id+"[^>]+?>\\s*?(\\$.+?)</span>.+?"+
-        "<dt>(.+?)en(.+?)quincenas.*?<span\\s+?id=.twoWeeksprice.+?"+ 
-        "<span.+?id=.creditCoppelPrice_"+id+".+?>(.+?)Quincenal</span>"
-      )
-      println(id)
+    def getRegularPrice(id: String): List[String] = {
+      val regex = new Regex("offerPrice_"+id+"[^>]+?>\\s*?(\\$[^>]+?)</span>")
       (regex findFirstMatchIn body) match {
-        case Some(x) => List(x.group(2),x.group(3),x.group(4),x.group(5))
-        case None => throw new Error("No match")
+        case Some(x) => List(x.group(1))
+        case None => throw new Error("No match for regular price data")
+      }
+    }
+    def getCreditPrice(id: String): List[String] = {
+      val regex = new Regex(
+        "<dt>([^e]+?)en([^q]+?)quincenas[^<]*?"+
+        "<span\\s+?id=.twoWeeksprice_"+id+".+?"+ 
+        "<span.+?id=.creditCoppelPrice_"+id+"[^>]+?>([^Q]+?)Quincenal</span>"
+      )
+      (regex findFirstMatchIn body) match {
+        case Some(x) => List(x.group(1),x.group(2),x.group(3))
+        case None => List("0","0","0")
       }
     }
     def listProd(list: List[String]): Product = {
-      println(list)
       Product(stripNaN(list(0)),
         strip4CSV(list(1)),
         strip4CSV(list(2)),
@@ -92,13 +100,7 @@ object CoppelParsing {
         stripND(list(5)).toInt,
         toCents(stripNaN(list(6))))
     }
-    println("RegEx matching")
-    val parts = getTitles
-    println("RegEx matching 2")
-    val lists = parts.map(part => part++getData(part.head))
-    lists.foreach(println)
-    println("Map to Product")
-    lists.map(listProd)
+    getTitles.map(base => listProd(base++getRegularPrice(base.head)++getCreditPrice(base.head)))
   }
 
 }

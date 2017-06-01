@@ -3,7 +3,7 @@ package com.rho.scrap
 object CoppelHTTP {
 
   import com.rho.client.RhoClient
-  import com.rho.scrap.CoppelParsing._
+  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,Department,Category,strip}
 
   val prefix = "[HTTP] "
   val catpth = "/ProductListingView"
@@ -18,14 +18,13 @@ object CoppelHTTP {
     (deps,cats)
   }
 
-  def getCategoryProducts(categoryId: String, index: Int = 0): List[Product] = {
-    val getParams = Map(
-      "catalogId"->"10001",
+  def getCategoryProducts(categoryId: String): List[Product] = {
+    val getParams = Map("catalogId"->"10001",
       "categoryId"->categoryId,
       "storeId"->"12761",
       "disableProductCompare"->"false")
-    val postParams = Map(
-      "contentBeginIndex"->"0",
+    def postParams(index: Int): Map[String,String] = {
+      Map("contentBeginIndex"->"0",
       "productBeginIndex"->index.toString,
       "beginIndex"->index.toString,
       "pageView"->"list",
@@ -34,12 +33,18 @@ object CoppelHTTP {
       "storeId"->"12761",
       "catalogId"->"10001",
       "requesttype"->"ajax")
-    System.out.println(prefix+"Fetching products for category "+categoryId+" at index "+index)
-    val body = strip(client.doPOST(postParams,getParams,catpth))
-    System.out.println(prefix+"Done")
-    com.rho.file.quickFunc.writeToFile("lastCatPage.html",body,false,"UTF-8")
-    val prod = readProducts(body)
-    prod
+    }
+    val perPage = 72
+    def iter(acc: List[Product], page: Int = 1): List[Product] = {
+      val index = (page-1)*perPage
+      System.out.println(prefix+"Fetching products for category "+categoryId+", page "+page)
+      val body = strip(client.doPOST(postParams(index),getParams,catpth))
+      System.out.println(prefix+"Done")
+      val prod = readProducts(body)
+      if (prod.size<72) acc++prod
+      else iter(acc++prod,page+1)
+    }
+    iter(List[Product]())
   }
 
 }
