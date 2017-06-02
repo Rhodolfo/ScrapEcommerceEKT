@@ -4,27 +4,7 @@ object CoppelParsing {
 
   import scala.util.matching.Regex
   import scala.math.round
-  import com.rho.scrap.CoppelHTTP.client
-
-  val separator = "|"
-  val root = "http://www.coppel.com"
-
-  abstract class Page(id: String, path: String, name: String) {
-    override def toString: String = id+separator+root+path+separator+name
-  }
-  case class Department(id: String, path: String, name: String)  extends Page(id,path,name)
-  case class Category(id: String, path: String, name: String, parent: String) extends Page(id,path,name) {
-    override def toString: String = id+separator+root+path+separator+name+separator+parent
-  }
-  case class Product(id: String, path: String, name: String, price: Int, 
-  twoWeeksPrice: Int, twoWeeksNumber: Int, twoWeeksPayment: Int) extends Page(id, path, name) {
-    override def toString: String = {
-      id+separator+root+path+separator+name+separator+
-      price+separator+twoWeeksPrice+separator+twoWeeksPayment+separator+twoWeeksNumber
-    }
-  }
-
-
+  import com.rho.scrap.CoppelCase.{Department,Category,Product}
 
   def strip(body: String): String = "\\r|\\n|\\t".r replaceAllIn(body," ")
   def stripSpaces(s: String) = "\\s".r replaceAllIn(s,"")
@@ -61,7 +41,7 @@ object CoppelParsing {
 
 
 
-  def readProducts(body: String): List[Product] = {
+  def readProducts(body: String, parent: String): List[Product] = {
     def getTitles: List[List[String]] = {
       val regex = new Regex(
         "<div\\s+?class=.product_title.>.+?"+
@@ -95,6 +75,7 @@ object CoppelParsing {
       Product(stripNaN(list(0)),
         strip4CSV(list(1)),
         strip4CSV(list(2)),
+        parent,
         toCents(stripNaN(list(3))),
         toCents(stripNaN(list(4))),
         stripND(list(5)).toInt,

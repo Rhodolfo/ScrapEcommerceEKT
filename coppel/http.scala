@@ -3,11 +3,15 @@ package com.rho.scrap
 object CoppelHTTP {
 
   import com.rho.client.RhoClient
-  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,Department,Category,strip}
+  import com.rho.scrap.CoppelCase.{Department,Category,Product}
+  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,strip}
+  import com.rho.scrap.CoppelLogging.{datadir,readCollection}
 
   val prefix = "[HTTP] "
   val catpth = "/ProductListingView"
   val client = new RhoClient(Scheme="http",Host="www.coppel.com")
+
+
 
   def getTree: (List[Department],Map[String,List[Category]]) = {
     System.out.println(prefix+"Fetching index page")
@@ -17,6 +21,8 @@ object CoppelHTTP {
     val cats = deps.map(dep => (dep.id,readCategories(body,dep.id))).toMap
     (deps,cats)
   }
+
+
 
   def getCategoryProducts(categoryId: String): List[Product] = {
     val getParams = Map("catalogId"->"10001",
@@ -40,7 +46,7 @@ object CoppelHTTP {
       System.out.println(prefix+"Fetching products for category "+categoryId+", page "+page)
       val body = strip(client.doPOST(postParams(index),getParams,catpth))
       System.out.println(prefix+"Done")
-      val prod = readProducts(body)
+      val prod = readProducts(body, categoryId)
       if (prod.size<72) acc++prod
       else iter(acc++prod,page+1)
     }
