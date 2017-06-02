@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
   libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   organization := "com.upax-research",
   version := "0.1.0",
-  scalacOptions := Seq("-feature"),
+  scalacOptions := Seq("-feature","-deprecation"),
   scalaVersion := "2.12.1")
 
 // JSON parsing library

@@ -5,7 +5,6 @@ object CoppelHTTP {
   import com.rho.client.RhoClient
   import com.rho.scrap.CoppelCase.{Department,Category,Product}
   import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,strip}
-  import com.rho.scrap.CoppelLogging.{datadir,readCollection}
 
   val prefix = "[HTTP] "
   val catpth = "/ProductListingView"
