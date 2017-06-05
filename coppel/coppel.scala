@@ -1,7 +1,7 @@
 object Coppel {
 
   import com.rho.scrap.CoppelCase.{Department,Category,Product}
-  import com.rho.scrap.CoppelHTTP.{getTree,getCategoryProducts}
+  import com.rho.scrap.CoppelHTTP.{getTree,getCategoryProducts,getProductData}
   import com.rho.scrap.CoppelLogging.{saveCollection,readDepartments,readCategories,readProducts}
 
   val prefix = "[Coppel] "
@@ -9,8 +9,8 @@ object Coppel {
   def main(args: Array[String]): Unit = {
     val (departments,categoryMap) = fetchIndex
     val productMap = fetchProducts(departments,categoryMap)
-    tellMeStats(departments,categoryMap,productMap)
-    fetchMissingData(departments,productMap)
+    val sortedDepartments = sortDepartments(departments,categoryMap,productMap)
+    fetchMissingData(sortedDepartments,productMap)
   }
 
 
@@ -41,7 +41,9 @@ object Coppel {
         System.out.println(prefix+"Fetching product list for department "+id)
         val products = {
           val attempt = readProducts(id)
-          if (!attempt.isEmpty) {attempt} else { 
+          if (!attempt.isEmpty) {
+            attempt
+          } else { 
             (for {
               cat<-categoryMap(id)
             } yield {
@@ -59,20 +61,23 @@ object Coppel {
 
 
   // I want to know how many products I need to revisit
-  def tellMeStats(departments: List[Department], 
-  categoryMap: Map[String,List[Category]], productMap: Map[String,List[Product]]): Unit = {
+  // And I want to know in what order I should do this
+  def sortDepartments(departments: List[Department], 
+  categoryMap: Map[String,List[Category]], productMap: Map[String,List[Product]]): List[Department] = {
     val numbers = for {
       dep <- departments
     } yield {
-      (dep.name,(productMap(dep.id).filter(!_.hasCreditData).size,productMap(dep.id).size))
+      (dep,(productMap(dep.id).filter(!_.hasCreditData).size,productMap(dep.id).size))
     }
-    def sum_pair(p: (Int,Int), q: (Int,Int)) = (p._1+q._1,p._2+q._2)
+    def sort_pair(p: (Any,Int), q: (Any,Int)): Boolean = p._2<q._2
+    def sum_pair(p: (Int,Int), q: (Int,Int)): (Int,Int) = (p._1+q._1,p._2+q._2)
     System.out.println(prefix+"Printing out number of products with missing credit data")
-    numbers.foreach {case(name,pair) => 
-      System.out.println(prefix+name+" missingDataProducts/totalNoProducts = "+pair._1+"/"+pair._2)
+    numbers.foreach {case(dep,pair) => 
+      System.out.println(prefix+dep.name+" missingDataProducts/totalNoProducts = "+pair._1+"/"+pair._2)
     }
     val summed = numbers.unzip._2.foldLeft[(Int,Int)]((0,0))(sum_pair)
     System.out.println(prefix+"Total missingDataProducts/totalNoProducts = "+summed._1+"/"+summed._2)
+    numbers.map(pair => (pair._1,pair._2._1)).sortWith(sort_pair).unzip._1
   }
 
 
@@ -82,8 +87,11 @@ object Coppel {
     def iter(deps: List[Department]) {
       if (deps.isEmpty) System.out.println(prefix+"Done fetching missing data")
       else {
-        val products = productMap(deps.head.id).filter(!_.hasCreditData)
-        products.foreach {p => println(p.path)}
+        val id = deps.head.id
+        val (has,hasNot) = productMap(id).partition(_.hasCreditData)
+        System.out.println(prefix+"Fetching missing credit data for department "+id)
+        val products = hasNot.map(getProductData) ++ has
+        saveCollection(products,id)
         iter(deps.tail)
       }
     }

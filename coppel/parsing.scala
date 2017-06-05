@@ -53,24 +53,6 @@ object CoppelParsing {
           List(entry.group(1),entry.group(2),entry.group(4))
       })
     }
-    def getRegularPrice(id: String): List[String] = {
-      val regex = new Regex("offerPrice_"+id+"[^>]+?>\\s*?(\\$[^>]+?)</span>")
-      (regex findFirstMatchIn body) match {
-        case Some(x) => List(x.group(1))
-        case None => throw new Error("No match for regular price data")
-      }
-    }
-    def getCreditPrice(id: String): List[String] = {
-      val regex = new Regex(
-        "<dt>([^e]+?)en([^q]+?)quincenas[^<]*?"+
-        "<span\\s+?id=.twoWeeksprice_"+id+".+?"+ 
-        "<span.+?id=.creditCoppelPrice_"+id+"[^>]+?>([^Q]+?)Quincenal</span>"
-      )
-      (regex findFirstMatchIn body) match {
-        case Some(x) => List(x.group(1),x.group(2),x.group(3))
-        case None => List("0","0","0")
-      }
-    }
     def listProd(list: List[String]): Product = {
       Product(stripNaN(list(0)),
         strip4CSV(list(1)),
@@ -81,7 +63,48 @@ object CoppelParsing {
         stripND(list(5)).toInt,
         toCents(stripNaN(list(6))))
     }
-    getTitles.map(base => listProd(base++getRegularPrice(base.head)++getCreditPrice(base.head)))
+    getTitles.map{base => 
+      listProd(base++getRegularPrice(base.head,body)++getCreditPrice(base.head,body))
+    }
   }
+
+
+
+  def readProductData(product: Product, body: String): Product = {
+    def listProd(list: List[String]): Product = {
+      Product(product.id,
+        product.name,
+        product.path,
+        product.parent,
+        toCents(stripNaN(list(0))),
+        toCents(stripNaN(list(1))),
+        stripND(list(2)).toInt,
+        toCents(stripNaN(list(3))))
+    }
+    listProd(getRegularPrice(product.id,body)++getCreditPrice(product.id,body))
+  }
+
+
+
+  private def getRegularPrice(id: String, body: String): List[String] = {
+    val regex = new Regex("offerPrice_"+id+"[^>]+?>\\s*?(\\$[^>]+?)</span>")
+    (regex findFirstMatchIn body) match {
+      case Some(x) => List(x.group(1))
+      case None => throw new Error("No match for regular price data")
+    }
+  }
+  private def getCreditPrice(id: String, body: String): List[String] = {
+    val regex = new Regex(
+      "<dt>([^e]+?)en([^q]+?)quincenas[^<]*?"+
+      "<span\\s+?id=.twoWeeksprice_"+id+".+?"+ 
+      "<span.+?id=.creditCoppelPrice_"+id+"[^>]+?>([^Q]+?)Quincenal</span>"
+    )
+    (regex findFirstMatchIn body) match {
+      case Some(x) => List(x.group(1),x.group(2),x.group(3))
+      case None => List("0","0","0")
+    }
+  }
+
+
 
 }

@@ -4,7 +4,7 @@ object CoppelHTTP {
 
   import com.rho.client.RhoClient
   import com.rho.scrap.CoppelCase.{Department,Category,Product}
-  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,strip}
+  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,readProductData,strip}
 
   val prefix = "[HTTP] "
   val catpth = "/ProductListingView"
@@ -53,6 +53,15 @@ object CoppelHTTP {
       else iter(acc++prod,page+1)
     }
     iter(List[Product]())
+  }
+
+
+  def getProductData(product: Product): Product = {
+    System.out.println(prefix+"Fetching product from "+product.path)
+    Thread.sleep(tsleep)
+    val body = strip(client.doGET(Map(),product.path))
+    System.out.println(prefix+"Done")
+    readProductData(product,body)
   }
 
 }
