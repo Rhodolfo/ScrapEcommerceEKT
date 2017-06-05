@@ -84,13 +84,29 @@ object Coppel {
 
   // Skeleton
   def fetchMissingData(departments: List[Department], productMap: Map[String,List[Product]]): Unit = {
+    val every = 50
+    def fixMissing(missing: List[Product], haveit: List[Product], id: String, counter: Int): 
+    List[Product] = {
+      if (missing.isEmpty) haveit 
+      else {
+        val new_missing = missing.tail
+        val new_haveit  = getProductData(missing.head) :: haveit
+        if (counter>=every) {
+          System.out.println(prefix+"Saving results every "+every+" requests")
+          saveCollection(new_missing++new_haveit,id)
+          fixMissing(new_missing,new_haveit,id,0)
+        } else {
+          fixMissing(new_missing,new_haveit,id,counter+1)
+        }
+      }
+    }
     def iter(deps: List[Department]) {
       if (deps.isEmpty) System.out.println(prefix+"Done fetching missing data")
       else {
         val id = deps.head.id
         val (has,hasNot) = productMap(id).partition(_.hasCreditData)
         System.out.println(prefix+"Fetching missing credit data for department "+id)
-        val products = hasNot.map(getProductData) ++ has
+        val products = fixMissing(hasNot,has,id,0)
         saveCollection(products,id)
         iter(deps.tail)
       }
