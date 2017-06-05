@@ -24,19 +24,32 @@ object CoppelLogging {
   }
 
   def readDepartments: List[Department] = {
-    readIntoList(datadir+prefix_dep,encoding="UTF-8").
-    tail.map(_.split("\\"+separator)).map(e => Department(e(0),e(1),e(2)))
+    val cont = readIntoList(datadir+prefix_dep,encoding="UTF-8")
+    if (cont.isEmpty) {
+      Nil 
+    } else {
+      cont.tail.map(_.split("\\"+separator)).map(e => Department(e(0),e(1),e(2)))
+    }
   }
 
   def readCategories: List[Category] = {
-    readIntoList(datadir+prefix_cat,encoding="UTF-8").
-    tail.map(_.split("\\"+separator)).map(e => Category(e(0),e(1),e(2),e(3))) 
+    val cont = readIntoList(datadir+prefix_cat,encoding="UTF-8")
+    if (cont.isEmpty) {
+      Nil 
+    } else {
+      cont.tail.map(_.split("\\"+separator)).map(e => Category(e(0),e(1),e(2),e(3)))
+    }
   }
 
   def readProducts(departmentId: String): List[Product] = {
-    readIntoList(datadir+prefix_cat+"_"+departmentId,encoding="UTF-8").
-    tail.map(_.split("\\"+separator)).map{e => 
-      Product(e(0),e(1),e(2),e(3),e(4).toInt,e(5).toInt,e(6).toInt,e(7).toInt)
+    val file = datadir+prefix_pro+"_"+departmentId
+    val cont = readIntoList(file,encoding="UTF-8")
+    if (cont.isEmpty) {
+      Nil 
+    } else {
+      cont.tail.map(_.split("\\"+separator)).map{e => 
+        Product(e(0),e(1),e(2),e(3),e(4).toInt,e(5).toInt,e(6).toInt,e(7).toInt)
+      }
     }
   }
 

@@ -9,11 +9,13 @@ object CoppelHTTP {
   val prefix = "[HTTP] "
   val catpth = "/ProductListingView"
   val client = new RhoClient(Scheme="http",Host="www.coppel.com")
+  val tsleep = 100 // milliseconds
 
 
 
   def getTree: (List[Department],Map[String,List[Category]]) = {
     System.out.println(prefix+"Fetching index page")
+    Thread.sleep(tsleep)
     val body = strip(client.doGET(Map(),""))
     System.out.println(prefix+"Done")
     val deps = readDepartments(body)
@@ -43,6 +45,7 @@ object CoppelHTTP {
     def iter(acc: List[Product], page: Int = 1): List[Product] = {
       val index = (page-1)*perPage
       System.out.println(prefix+"Fetching products for category "+categoryId+", page "+page)
+      Thread.sleep(tsleep)
       val body = strip(client.doPOST(postParams(index),getParams,catpth))
       System.out.println(prefix+"Done")
       val prod = readProducts(body, categoryId)
