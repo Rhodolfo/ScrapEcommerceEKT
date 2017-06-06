@@ -3,7 +3,7 @@ package com.rho.scrap
 object FamsaParsing {
   
   import scala.util.matching.Regex
-  import com.rho.scrap.FamsaClasses.Page
+  import com.rho.scrap.FamsaClasses.{Page,Item}
 
   val prefix = "[Parsing] "
 
@@ -32,11 +32,48 @@ object FamsaParsing {
     (for {
       entry <- (regex findAllMatchIn trimmedBody).toList
     } yield {
-      (trim(entry.group(4)),trim(entry.group(2)))
+      trim(entry.group(2))
     }).filter {
-      case(name,link) => filterLinks(link)
+      case(link) => filterLinks(link)
     }.map {
-      case(name,link) => new Page(name,link)
+      case(link) => new Page(link)
+    }
+  }
+
+
+
+  def readItems(body: String, parentPage: Page): List[Item] = {
+    import net.liftweb.json._
+    import scala.math.round
+    def parsePrice(s: String): Int = {
+      val t = if (s.isEmpty) "0" else "(,|$|\\s)".r replaceAllIn(s,"")
+      round(round(t.toDouble*100.0))
+    }
+    val check404 = {
+      (">\\D*?404\\D*?<".r findFirstIn body) match {
+        case Some(x) => true
+        case None => false
+      }
+    }
+    if (check404) Nil
+    else {
+      implicit val formats = DefaultFormats
+      val regex = new Regex("objDataProd\\s*?=\\s*?(\\S.+?);")
+      val json = (regex findFirstMatchIn body) match {
+        case Some(x) => parse(x.group(1))
+        case None => throw new Error("Item data not found")
+      }
+      for {
+        entry @ JObject(x) <- json
+        JField("idProducto",idProducto) <- entry.obj
+        JField("nombre",nombre) <- entry.obj
+        JField("precio",precio) <- entry.obj
+        JField("precioRegular",precioRegular) <- entry.obj
+        JField("rating",rating) <- entry.obj
+      } yield {
+        Item(idProducto.extract[String], nombre.extract[String], parentPage,
+        parsePrice(precio.extract[String]), parsePrice(precioRegular.extract[String]))
+      }
     }
   }
 
