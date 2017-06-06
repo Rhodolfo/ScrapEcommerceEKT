@@ -18,7 +18,7 @@ object CoppelCase {
     def header: String = "#"+"id"+separator+"url"+separator+"name"+separator+"parent"
   }
 
-  case class Product(id: String, path: String, name: String, parent: String,
+  case class Item(id: String, path: String, name: String, parent: String,
   price: Int, twoWeeksPrice: Int, twoWeeksNumber: Int, twoWeeksPayment: Int) 
   extends Page(id, path, name) {
     def hasCreditData: Boolean = twoWeeksPrice>0 && twoWeeksNumber>0 && twoWeeksPayment>0

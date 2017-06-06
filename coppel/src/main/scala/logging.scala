@@ -4,7 +4,7 @@ object CoppelLogging {
 
   import scala.reflect.ClassTag
   import com.rho.file.quickFunc.{writeToFile,readIntoList}
-  import com.rho.scrap.CoppelCase.{Page,Department,Category,Product,separator}
+  import com.rho.scrap.CoppelCase.{Page,Department,Category,Item,separator}
 
   val datadir = "data/"
   val prefix_dep = "coppel_departments"
@@ -16,7 +16,7 @@ object CoppelLogging {
     val (name,header) = list.head match {
       case x: Department => (prefix_dep,x.header)
       case x: Category => (prefix_cat,x.header)
-      case x: Product => (prefix_pro+"_"+parentId,x.header)
+      case x: Item => (prefix_pro+"_"+parentId,x.header)
     }
     def cat(a: String, b: String): String = if (a.isEmpty) b else a+"\n"+b
     val body = header + "\n" + list.map(_.toString).foldLeft[String]("")(cat)
@@ -41,14 +41,14 @@ object CoppelLogging {
     }
   }
 
-  def readProducts(departmentId: String): List[Product] = {
+  def readItems(departmentId: String): List[Item] = {
     val file = datadir+prefix_pro+"_"+departmentId
     val cont = readIntoList(file,encoding="UTF-8")
     if (cont.isEmpty) {
       Nil 
     } else {
       cont.tail.map(_.split("\\"+separator)).map{e => 
-        Product(e(0),e(1),e(2),e(3),e(4).toInt,e(5).toInt,e(6).toInt,e(7).toInt)
+        Item(e(0),e(1),e(2),e(3),e(4).toInt,e(5).toInt,e(6).toInt,e(7).toInt)
       }
     }
   }

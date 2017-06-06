@@ -4,7 +4,7 @@ object CoppelParsing {
 
   import scala.util.matching.Regex
   import scala.math.round
-  import com.rho.scrap.CoppelCase.{Department,Category,Product}
+  import com.rho.scrap.CoppelCase.{Department,Category,Item}
 
   def strip(body: String): String = "\\r|\\n|\\t".r replaceAllIn(body," ")
   def stripSpaces(s: String) = "\\s".r replaceAllIn(s,"")
@@ -41,7 +41,7 @@ object CoppelParsing {
 
 
 
-  def readProducts(body: String, parent: String): List[Product] = {
+  def readItems(body: String, parent: String): List[Item] = {
     def getTitles: List[List[String]] = {
       val regex = new Regex(
         "<div\\s+?class=.product_title.>.+?"+
@@ -53,8 +53,8 @@ object CoppelParsing {
           List(entry.group(1),entry.group(2),entry.group(4))
       })
     }
-    def listProd(list: List[String]): Product = {
-      Product(stripNaN(list(0)),
+    def listProd(list: List[String]): Item = {
+      Item(stripNaN(list(0)),
         strip4CSV(list(1)),
         strip4CSV(list(2)),
         parent,
@@ -70,9 +70,9 @@ object CoppelParsing {
 
 
 
-  def readProductData(product: Product, body: String): Product = {
-    def listProd(list: List[String]): Product = {
-      Product(product.id,
+  def readItemData(product: Item, body: String): Item = {
+    def listProd(list: List[String]): Item = {
+      Item(product.id,
         product.name,
         product.path,
         product.parent,

@@ -3,8 +3,8 @@ package com.rho.scrap
 object CoppelHTTP {
 
   import com.rho.client.RhoClient
-  import com.rho.scrap.CoppelCase.{Department,Category,Product}
-  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readProducts,readProductData,strip}
+  import com.rho.scrap.CoppelCase.{Department,Category,Item}
+  import com.rho.scrap.CoppelParsing.{readDepartments,readCategories,readItems,readItemData,strip}
 
   val prefix = "[HTTP] "
   val catpth = "/ProductListingView"
@@ -25,7 +25,7 @@ object CoppelHTTP {
 
 
 
-  def getCategoryProducts(categoryId: String): List[Product] = {
+  def getCategoryItems(categoryId: String): List[Item] = {
     val getParams = Map("catalogId"->"10001",
       "categoryId"->categoryId,
       "storeId"->"12761",
@@ -42,26 +42,26 @@ object CoppelHTTP {
       "requesttype"->"ajax")
     }
     val perPage = 72
-    def iter(acc: List[Product], page: Int = 1): List[Product] = {
+    def iter(acc: List[Item], page: Int = 1): List[Item] = {
       val index = (page-1)*perPage
       System.out.println(prefix+"Fetching products for category "+categoryId+", page "+page)
       Thread.sleep(tsleep)
       val body = strip(client.doPOST(postParams(index),getParams,catpth))
       System.out.println(prefix+"Done")
-      val prod = readProducts(body, categoryId)
+      val prod = readItems(body, categoryId)
       if (prod.size<72) acc++prod
       else iter(acc++prod,page+1)
     }
-    iter(List[Product]())
+    iter(List[Item]())
   }
 
 
-  def getProductData(product: Product): Product = {
+  def getItemData(product: Item): Item = {
     System.out.println(prefix+"Fetching product from "+product.path)
     Thread.sleep(tsleep)
     val body = strip(client.doGET(Map(),product.path))
     System.out.println(prefix+"Done")
-    readProductData(product,body)
+    readItemData(product,body)
   }
 
 }

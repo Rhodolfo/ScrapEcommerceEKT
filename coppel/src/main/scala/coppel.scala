@@ -1,16 +1,16 @@
 object Coppel {
 
   import com.rho.file.quickFunc.makeDirectory
-  import com.rho.scrap.CoppelCase.{Department,Category,Product}
-  import com.rho.scrap.CoppelHTTP.{getTree,getCategoryProducts,getProductData}
-  import com.rho.scrap.CoppelLogging.{saveCollection,readDepartments,readCategories,readProducts,datadir}
+  import com.rho.scrap.CoppelCase.{Department,Category,Item}
+  import com.rho.scrap.CoppelHTTP.{getTree,getCategoryItems,getItemData}
+  import com.rho.scrap.CoppelLogging.{saveCollection,readDepartments,readCategories,readItems,datadir}
 
   val prefix = "[Coppel] "
 
   def main(args: Array[String]): Unit = {
     makeDirectory(datadir)
     val (departments,categoryMap) = fetchIndex
-    val productMap = fetchProducts(departments,categoryMap)
+    val productMap = fetchItems(departments,categoryMap)
     val sortedDepartments = sortDepartments(departments,categoryMap,productMap)
     fetchMissingData(sortedDepartments,productMap)
   }
@@ -33,23 +33,23 @@ object Coppel {
 
 
   // Fetches all products grouped by department in the form of a map
-  def fetchProducts(departments: List[Department], categoryMap: Map[String,List[Category]]):
-  Map[String,List[Product]] = {
-    def iterDept(deps: List[Department], acc: Map[String,List[Product]]):
-    Map[String,List[Product]] = {
+  def fetchItems(departments: List[Department], categoryMap: Map[String,List[Category]]):
+  Map[String,List[Item]] = {
+    def iterDept(deps: List[Department], acc: Map[String,List[Item]]):
+    Map[String,List[Item]] = {
       if (deps.isEmpty) acc 
       else {
         val id = deps.head.id
         System.out.println(prefix+"Fetching product list for department "+id)
         val products = {
-          val attempt = readProducts(id)
+          val attempt = readItems(id)
           if (!attempt.isEmpty) {
             attempt
           } else { 
             (for {
               cat<-categoryMap(id)
             } yield {
-              getCategoryProducts(cat.id)
+              getCategoryItems(cat.id)
             }).flatten
           }
         }
@@ -65,7 +65,7 @@ object Coppel {
   // I want to know how many products I need to revisit
   // And I want to know in what order I should do this
   def sortDepartments(departments: List[Department], 
-  categoryMap: Map[String,List[Category]], productMap: Map[String,List[Product]]): List[Department] = {
+  categoryMap: Map[String,List[Category]], productMap: Map[String,List[Item]]): List[Department] = {
     val numbers = for {
       dep <- departments
     } yield {
@@ -75,24 +75,24 @@ object Coppel {
     def sum_pair(p: (Int,Int), q: (Int,Int)): (Int,Int) = (p._1+q._1,p._2+q._2)
     System.out.println(prefix+"Printing out number of products with missing credit data")
     numbers.foreach {case(dep,pair) => 
-      System.out.println(prefix+dep.name+" missingDataProducts/totalNoProducts = "+pair._1+"/"+pair._2)
+      System.out.println(prefix+dep.name+" missingDataItems/totalNoItems = "+pair._1+"/"+pair._2)
     }
     val summed = numbers.unzip._2.foldLeft[(Int,Int)]((0,0))(sum_pair)
-    System.out.println(prefix+"Total missingDataProducts/totalNoProducts = "+summed._1+"/"+summed._2)
+    System.out.println(prefix+"Total missingDataItems/totalNoItems = "+summed._1+"/"+summed._2)
     numbers.map(pair => (pair._1,pair._2._1)).sortWith(sort_pair).unzip._1
   }
 
 
 
   // Skeleton
-  def fetchMissingData(departments: List[Department], productMap: Map[String,List[Product]]): Unit = {
+  def fetchMissingData(departments: List[Department], productMap: Map[String,List[Item]]): Unit = {
     val every = 50
-    def fixMissing(missing: List[Product], haveit: List[Product], id: String, counter: Int): 
-    List[Product] = {
+    def fixMissing(missing: List[Item], haveit: List[Item], id: String, counter: Int): 
+    List[Item] = {
       if (missing.isEmpty) haveit 
       else {
         val new_missing = missing.tail
-        val new_haveit  = getProductData(missing.head) :: haveit
+        val new_haveit  = getItemData(missing.head) :: haveit
         if (counter>=every) {
           System.out.println(prefix+"Saving results every "+every+" requests")
           saveCollection(new_missing++new_haveit,id)
