@@ -1,12 +1,14 @@
 object Coppel {
 
+  import com.rho.file.quickFunc.makeDirectory
   import com.rho.scrap.CoppelCase.{Department,Category,Product}
   import com.rho.scrap.CoppelHTTP.{getTree,getCategoryProducts,getProductData}
-  import com.rho.scrap.CoppelLogging.{saveCollection,readDepartments,readCategories,readProducts}
+  import com.rho.scrap.CoppelLogging.{saveCollection,readDepartments,readCategories,readProducts,datadir}
 
   val prefix = "[Coppel] "
 
   def main(args: Array[String]): Unit = {
+    makeDirectory(datadir)
     val (departments,categoryMap) = fetchIndex
     val productMap = fetchProducts(departments,categoryMap)
     val sortedDepartments = sortDepartments(departments,categoryMap,productMap)
