@@ -19,13 +19,15 @@ object FamsaLogging {
   def saveItems(products: List[Item]): Unit = {
     import java.io.File
     val string = {
-      if (products.isEmpty) throw new Error("Empty product list")
+      if (products.isEmpty) ""
       else products.foldLeft[String]("")(concatItems)
     }
-    if ((new File(product_file)).exists) {
-      writeToFile(product_file,products.head.header+"\n"+string,encoding="UTF-8")
-    } else {
-      writeToFile(product_file,string,encoding="UTF-8",append=true)
+    if (!string.isEmpty) { 
+      if ((new File(product_file)).exists) {
+        writeToFile(product_file,products.head.header+"\n"+string,encoding="UTF-8")
+      } else {
+        writeToFile(product_file,string,encoding="UTF-8",append=true)
+      }
     }
   }
 
