@@ -13,18 +13,24 @@ object FamsaParsing {
   private def stripSpaces(s: String) = "\\s".r replaceAllIn(s,"")
 
   def readPages(body: String): List[Page] = {
+    val trimmedBody = {
+      "class=.MCategorias.+?</nav>".r findFirstIn body match {
+        case Some(x) => x
+        case None => throw new Error("Bad body trim")
+      }
+    }
     def filterLinks(path: String): Boolean = {
       def matchBadPattern(pattern: String): Boolean = (pattern.r findFirstIn path) match {
         case Some(x) => true
         case None => false
       }
-      val blacklist = List("centro-de-ayuda","garantias-y-devoluciones","venta-empresarial")
-      !(blacklist exists matchBadPattern)
+      val blacklist = List("busqueda")
+      if (path.isEmpty) false 
+      else !(blacklist exists matchBadPattern)
     }
-    val regex = new Regex("<li.+?<a href=(\"|')(\\W.+?)(\"|').*?>(.+?)<")
-    println(stripSpaces("    stripMe      ")+"END")
+    val regex = new Regex("<a.+?href=(\"|')(.*?)(\"|').*?>(.+?)<")
     (for {
-      entry <- (regex findAllMatchIn body).toList
+      entry <- (regex findAllMatchIn trimmedBody).toList
     } yield {
       (trim(entry.group(4)),trim(entry.group(2)))
     }).filter {
