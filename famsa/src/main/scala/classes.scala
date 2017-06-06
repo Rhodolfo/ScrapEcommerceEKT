@@ -33,6 +33,7 @@ object FamsaClasses {
 
 
   def getBottomLevels(pages: List[Page]): List[Page] = {
+    import com.rho.scrap.FamsaHTTP.getSubCategories
     def matchLevels(parent: Array[String], child: Array[String]): Boolean = {
       if (child.size <= parent.size) false
       else (parent zip child.take(parent.size)).forall{case(p,q) => p==q}
@@ -40,7 +41,8 @@ object FamsaClasses {
     def existsSubPage(p: Page): Boolean = {
       pages.filter(_.levels.size>p.levels.size).exists(c => matchLevels(p.levels,c.levels))
     }
-    pages.filter(x => !existsSubPage(x))
+    val (root,deep) = pages.filter(x => !existsSubPage(x)).partition(_.levels.size==1)
+    root.flatMap(p => getSubCategories(p))++deep
   }
 
   def getTopLevels(pages: List[Page]): List[Page] = pages.filter(_.levels.size == 1)

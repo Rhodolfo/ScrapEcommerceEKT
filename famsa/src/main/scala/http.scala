@@ -4,7 +4,7 @@ object FamsaHTTP {
 
   import com.rho.client.RhoClient
   import com.rho.file.quickFunc.readIntoString
-  import com.rho.scrap.FamsaParsing.{readPages,readItems}
+  import com.rho.scrap.FamsaParsing.{readPages,readItems,readSubCategories}
   import com.rho.scrap.FamsaClasses.{Page,Item}
 
   private def strip(s: String) = "(\\t|\\n|\\r)".r replaceAllIn(s,"")
@@ -26,5 +26,14 @@ object FamsaHTTP {
     System.out.println(prefix+"Done")
     readItems(body,page)
   }
+
+  def getSubCategories(page: Page): List[Page] = {
+    System.out.println(prefix+"Fetching subcategories for "+page)
+    val body = strip(client.doGET(Map(),page.path))
+    System.out.println(prefix+"Done")
+    readSubCategories(body)
+  }
+
+
 
 }

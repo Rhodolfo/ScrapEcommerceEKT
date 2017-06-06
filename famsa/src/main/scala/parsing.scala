@@ -4,21 +4,19 @@ object FamsaParsing {
   
   import scala.util.matching.Regex
   import com.rho.scrap.FamsaClasses.{Page,Item}
+  import com.rho.scrap.FamsaHTTP.host
 
   val prefix = "[Parsing] "
 
   private def stripLeadingSpaces(s: String) = "^\\s{1,}".r replaceAllIn(s,"")
   private def stripTrailingSpaces(s: String) = "\\s{1,}$".r replaceAllIn(s,"")
   private def trim(s: String) = stripLeadingSpaces(stripTrailingSpaces(s))
+  private def removeRoot(s: String) = ("^.*?"+host).r replaceAllIn(s,"")
   private def stripSpaces(s: String) = "\\s".r replaceAllIn(s,"")
 
-  def readPages(body: String): List[Page] = {
-    val trimmedBody = {
-      "class=.MCategorias.+?</nav>".r findFirstIn body match {
-        case Some(x) => x
-        case None => throw new Error("Bad body trim")
-      }
-    }
+
+
+  private def parseForLinks(body: String): List[Page] = {
     def filterLinks(path: String): Boolean = {
       def matchBadPattern(pattern: String): Boolean = (pattern.r findFirstIn path) match {
         case Some(x) => true
@@ -30,14 +28,26 @@ object FamsaParsing {
     }
     val regex = new Regex("<a.+?href=(\"|')(.*?)(\"|').*?>(.+?)<")
     (for {
-      entry <- (regex findAllMatchIn trimmedBody).toList
+      entry <- (regex findAllMatchIn body).toList
     } yield {
-      trim(entry.group(2))
+      trim(removeRoot(entry.group(2)))
     }).filter {
       case(link) => filterLinks(link)
     }.map {
       case(link) => new Page(link)
     }
+  }
+
+
+
+  def readPages(body: String): List[Page] = {
+    val trimmedBody = {
+      "class=.MCategorias.+?</nav>".r findFirstIn body match {
+        case Some(x) => x
+        case None => throw new Error("Bad body trim")
+      }
+    }
+    parseForLinks(trimmedBody)
   }
 
 
@@ -75,6 +85,18 @@ object FamsaParsing {
         parsePrice(precio.extract[String]), parsePrice(precioRegular.extract[String]))
       }
     }
+  }
+
+  
+
+  def readSubCategories(body: String): List[Page] = {
+    val trimmedBody = {
+      "id=.s-filtro_cat.+?</nav>".r findFirstIn body match {
+        case Some(x) => x
+        case None => throw new Error("Bad body trim")
+      }
+    }
+    parseForLinks(trimmedBody)
   }
 
 }
