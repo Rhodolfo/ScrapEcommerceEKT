@@ -24,9 +24,9 @@ object FamsaLogging {
     }
     if (!string.isEmpty) { 
       if ((new File(product_file)).exists) {
-        writeToFile(product_file,products.head.header+"\n"+string,encoding="UTF-8")
-      } else {
         writeToFile(product_file,string,encoding="UTF-8",append=true)
+      } else {
+        writeToFile(product_file,products.head.header+"\n"+string,encoding="UTF-8",append=false)
       }
     }
   }
