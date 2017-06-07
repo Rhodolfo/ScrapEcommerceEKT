@@ -1,0 +1,12 @@
+Projects in this repository:
+- coppel
+- famsa
+
+To run a project you need sbt,
+$ sbt
+then inside sbt,
+$ project <project>
+$ run
+data from is saved under data/
+
+You must have an internet connection for anything to work.

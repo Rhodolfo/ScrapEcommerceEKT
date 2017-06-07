@@ -16,7 +16,10 @@ object CoppelLogging {
     val (name,header) = list.head match {
       case x: Department => (prefix_dep,x.header)
       case x: Category => (prefix_cat,x.header)
-      case x: Item => (prefix_pro+"_"+parentId,x.header)
+      case x: Item => {
+        if (parentId.isEmpty) (prefix_pro,x.header)
+        else (prefix_pro+"_"+parentId,x.header)
+      }
     }
     def cat(a: String, b: String): String = if (a.isEmpty) b else a+"\n"+b
     val body = header + "\n" + list.map(_.toString).foldLeft[String]("")(cat)

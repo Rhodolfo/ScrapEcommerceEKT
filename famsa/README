@@ -1,0 +1,13 @@
+1. Get a list of categories from the index https://www.famsa.com/, this gives us a tree of structure:
+	category -> subcategory -> subsubcategory ...
+We filter this tree for the bottom level categories, which hold product data. 
+Sometimes the URLs are strange, see
+	https://www.famsa.com/mochilas-y-accesorios
+for these we need to fectch the subcategories directly (they tend to be top level categories).
+
+2. Once we have a list of the deepest categories in the tree, 
+we iterate over them to fetch pricing data for the products inside each category.
+I keep track of the top level categories for checkpointing.
+	https://www.famsa.com/mochilas-y-accesorios/mochilas-
+
+Pricing data is actually in JSON format, see parsing.scala for details.

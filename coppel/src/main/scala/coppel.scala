@@ -8,11 +8,21 @@ object Coppel {
   val prefix = "[Coppel] "
 
   def main(args: Array[String]): Unit = {
+    System.out.println(prefix+"Begin")
+    val products = scrapPrices
+    saveCollection(products)
+    System.out.println(prefix+"End")
+  }
+
+
+
+  // Gets a list of all products with pricing data
+  def scrapPrices: List[Item] = {
     makeDirectory(datadir)
     val (departments,categoryMap) = fetchIndex
     val productMap = fetchItems(departments,categoryMap)
     val sortedDepartments = sortDepartments(departments,categoryMap,productMap)
-    fetchMissingData(sortedDepartments,productMap)
+    fetchMissingData(sortedDepartments,productMap) 
   }
 
 
@@ -84,8 +94,9 @@ object Coppel {
 
 
 
-  // Skeleton
-  def fetchMissingData(departments: List[Department], productMap: Map[String,List[Item]]): Unit = {
+  // Takes all products that have missing credit data (zeroes) and goes to their product page to fetch it
+  // We iterate by department to save results along the way
+  def fetchMissingData(departments: List[Department], productMap: Map[String,List[Item]]): List[Item] = {
     val every = 50
     def fixMissing(missing: List[Item], haveit: List[Item], id: String, counter: Int): 
     List[Item] = {
@@ -102,18 +113,20 @@ object Coppel {
         }
       }
     }
-    def iter(deps: List[Department]) {
-      if (deps.isEmpty) System.out.println(prefix+"Done fetching missing data")
-      else {
+    def iter(deps: List[Department], acc: List[Item]): List[Item] = {
+      if (deps.isEmpty) {
+        System.out.println(prefix+"Done fetching missing data")
+        acc
+      } else {
         val id = deps.head.id
         val (has,hasNot) = productMap(id).partition(_.hasCreditData)
         System.out.println(prefix+"Fetching missing credit data for department "+id)
         val products = fixMissing(hasNot,has,id,0)
         saveCollection(products,id)
-        iter(deps.tail)
+        iter(deps.tail,acc++products)
       }
     }
-    iter(departments)
+    iter(departments,Nil)
   }
 
 }

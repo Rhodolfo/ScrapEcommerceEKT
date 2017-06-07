@@ -23,7 +23,6 @@ lazy val json = Seq(libraryDependencies += "net.liftweb" %% "lift-json" % "3.0.1
 lazy val coppel = (project in file("coppel"))
   .settings(commonSettings: _*)
   .settings(name := "Coppel")
-  .settings(json: _*)
   .dependsOn(rhoClient)
   .dependsOn(rhoFUtils)
   .dependsOn(rhoFCheck)

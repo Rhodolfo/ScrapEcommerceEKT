@@ -1,0 +1,14 @@
+General strategy:
+
+1. Fetch all departments and categories from the index page, this gives us a list of categoryIds.
+	https://www.coppel.com
+
+2. POST to the /ProductListingView page to get a list of products with prices, parameters for this POST were obtained in step 1.
+	https://www.coppel.com/ProductListingView?catalogId=10001&categoryId=13031&storeId=12761&disableProductCompare=false
+
+3. Sometimes the pricing data is missing, so we need to visit each product page to fetch that.
+	https://www.coppel.com/accesorios-para-celulares/mica-blob-para-zte-v6-plus-pm-2518823
+
+I use case classes under case.scala to hold data, 
+http requests are handled by the object in http.scala,
+the rest of the file names should be self explanatory.
