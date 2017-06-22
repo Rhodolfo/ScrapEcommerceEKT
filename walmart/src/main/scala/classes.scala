@@ -19,6 +19,12 @@ object WalmartClasses {
     PrecioGranel: String,
     PrecioNumerico: Int
   ) {
+    def header: String = {
+      val list = List("ProductUrl","upc","DepartmentId","Family","Line","Brand",
+        "Description","Precio","PrecioGranel","PrecioNumerico")
+      list.foldLeft[String]("")(concat)
+    }
+
     override def toString: String = {
       val list = List(ProductUrl,upc,DepartmentId,Family,Line,Brand,
         Description,Precio,PrecioGranel,PrecioNumerico.toString)
