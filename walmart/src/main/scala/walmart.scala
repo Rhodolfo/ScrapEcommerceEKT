@@ -48,9 +48,10 @@ object Walmart {
 
   def saveProducts(products: List[Product]): Unit = {
     def concat(a: String, b: Product) = if (a.isEmpty) b.toString else a+"\n"+b.toString
+    val exists = (new java.io.File(datdir+prodfile)).exists
     val (append,string) = {
-      if (checkpoint.events.isEmpty) (false,products.head.header+"\n"+products.foldLeft[String]("")(concat))
-      else (true,products.foldLeft[String]("")(concat))
+      if (exists) (true,products.foldLeft[String]("")(concat))
+      else (false,products.head.header+"\n"+products.foldLeft[String]("")(concat))
     }
     writeToFile(datdir+prodfile,string,encoding="UTF-8",append=append)
   }
